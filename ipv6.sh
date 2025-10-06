@@ -13,8 +13,8 @@ EOF
     IPC=$(echo "$PUBLIC_IP" | cut -d"." -f3)
     IPD=$(echo "$PUBLIC_IP" | cut -d"." -f4)
 
-    # 🔧 Chỉ lấy interface đang active, bỏ loopback
-    IFACE=$(nmcli -t -f DEVICE,STATE dev | grep ':connected' | cut -d: -f1 | grep -v '^lo' | head -n1)
+    # ✅ Chỉ lấy interface thật (bỏ lo, lấy dòng đầu tiên)
+    IFACE=$(nmcli -t -f DEVICE,STATE dev status | grep ':connected' | grep -v '^lo:' | head -n1 | cut -d: -f1)
 
     if [ -z "$IFACE" ]; then
         echo "❌ Không tìm thấy card mạng đang hoạt động! Thoát..."
@@ -50,7 +50,6 @@ EOF
 
     nmcli connection up "$IFACE" >/dev/null 2>&1
 
-    # ✅ Kiểm tra IPv6 hoạt động
     echo "Kiểm tra kết nối IPv6..."
     if ping6 -c 2 ipv6.google.com >/dev/null 2>&1; then
         echo "✅ Đã cấu hình IPv6 thành công và kết nối hoạt động!"
@@ -58,7 +57,6 @@ EOF
         echo "⚠️ IPv6 đã gán nhưng chưa ping được ra ngoài."
         echo "→ Kiểm tra firewall hoặc default gateway IPv6."
     fi
-
 else
     echo "Không tìm thấy YUM (có thể không phải hệ RedHat/AlmaLinux)"
 fi
